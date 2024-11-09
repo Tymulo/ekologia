@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 class Time():
     def __init__(self, day, hour, minute):
         self.day = day
@@ -28,3 +29,8 @@ if __name__ == "__main__":
     time_speed = 1
     pause = False
     gtime(time_speed, pause)
+=======
+import time
+import ctypes
+import pygame
+>>>>>>> 21f762d544fb293ab5100765ad1851efc3257e77
