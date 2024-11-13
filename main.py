@@ -28,8 +28,6 @@ def gtime(time_speed, pause):
 if __name__ == "__main__":
     time_speed = 1
     pause = False
-    c
-
 
     # import pygame
     # pygame.init()
