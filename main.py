@@ -40,133 +40,137 @@ class Elektrownia:
         self.dlugo = dlugo
 
 def ocen_efektywnosc(e, w):
-    if e.type == "solarna":
-        if w.type == "sundy": return 10
-        if w.type == "windy": return 6
-        if w.type == "cloudy": return 3
-        if w.type == "rainy": return 2
-    elif e.type == "wiatrowa":
-        if w.type == "windy": return 10
-        if w.type == "cloudy": return 7
-        if w.type == "sundy": return 5
-        if w.type == "rainy": return 5
-    elif e.type == "wodna":
-        if w.type == "rainy": return 9
-        if w.type == "cloudy": return 7
-        if w.type == "windy": return 6
-        if w.type == "sundy": return 4
-    elif e.type == "atomowa":
-        return 7  # Same effectiveness for all weather
-    elif e.type == "weglowa":
-        if w.type == "cloudy": return 8
-        if w.type == "rainy": return 7
-        if w.type == "windy": return 5
-        if w.type == "sundy": return 3
-    elif e.type == "gazowa":
-        if w.type == "sundy": return 8
-        if w.type == "windy": return 7
-        if w.type == "rainy": return 5
-        if w.type == "cloudy": return 5
-    return 3  # Default effectiveness
+    # Funkcja ocenia efektywność elektrowni na podstawie pogody
+    effectiveness = {
+        "solarna": {"sunny": 10, "windy": 6, "cloudy": 3, "rainy": 2},
+        "wiatrowa": {"sunny": 5, "windy": 10, "cloudy": 7, "rainy": 5},
+        "wodna": {"sunny": 4, "windy": 6, "cloudy": 7, "rainy": 9},
+        "atomowa": {"sunny": 7, "windy": 7, "cloudy": 7, "rainy": 7},
+        "weglowa": {"sunny": 3, "windy": 5, "cloudy": 8, "rainy": 7},
+        "gazowa": {"sunny": 8, "windy": 7, "cloudy": 5, "rainy": 5},
+    }
+    return effectiveness[e.type][w.type]
 
-def paski(k, e, w):
-    ekologia = (e.eko + e.dlugo) / 2 * 10
-    print(f"Ekologia- {ekologia}%")
-    energia = k * 10
-    print(f"Energia- {energia}%")
-    reputacja = k * (e.eko + e.dlugo) / 2 - e.koszt
-    print(f"Reputacja- {reputacja}%")
-
-    
-class Button():
-    def __init__(self, x, y, scale, image):
-        self.x = x
-        self.y = y
-        self.scale = scale
-        self.image = image
-
-
-# def load_shared_lib(libname):
-#     # We assume the shared library is present in the same directory as this script.
-#     libpath = os.path.dirname(os.path.realpath(__file__))
-
-#     # Append proper extension to library path (.dll for Windows, .so for Linux)
-#     if sys.platform in ("win32", "cygwin"):
-#         libpath = os.path.join(libpath, "%s.dll" % libname)
-#     else:
-#         libpath = os.path.join(libpath, "%s.so" % libname)
-
-#     # Check that library exists (in same folder as this script).
-#     if not os.path.exists(libpath):
-#         print ("Error - could not find shared library %s; could not find file:" % libname)
-#         print (" >> %s" % libpath)
-#         return None
-
-#     return ctypes.CDLL(libpath)
+def draw_bar(surface, x, y, width, height, value, max_value, color):
+    pygame.draw.rect(surface, (255, 255, 255), (x, y, width, height), 2)
+    pygame.draw.rect(surface, color, (x, y, (width * value) / max_value, height))
 
 
 if __name__ == "__main__":
     import time
-    import ctypes
     import pygame
-    import os
     import random
-    import sys
+
+
     wthr = [
         Weather("sunny"),
         Weather("cloudy"),
         Weather("windy"),
         Weather("rainy")
     ]
+
     cr_time = Time(0, 0, 0)
     time_speed = 2
     pause = False
-
-    # os.add_dll_directory(os.getcwd())
-    # dll_path = os.path.join(os.getcwd(), "pogoda.dll")
-    # print(dll_path)
-    # if not os.path.exists(dll_path):
-    #     raise FileNotFoundError(f"{dll_path} not found")
-    # # pogoda = ctypes.cdll.LoadLibrary(dll_path)
-    # load_shared_lib("pogoda")
+    music_playing = True
+    elektrownia = Elektrownia("solarna", 7, 5, 8)
 
     pygame.init()
+    pygame.mixer.init()
     X, Y = 1280, 720
     white = (255, 255, 255)
-    green = (0, 255, 0)
     blue = (0, 0, 128)
-    gray = (39, 39, 39)
-    grayer = (32, 32, 32)
     pygame.display.set_caption("Simulation")
+
+
+    pauza = pygame.image.load("Pauza.png")
+    wyjscie = pygame.image.load("Exit.png")
+    wyjscie_rect = wyjscie.get_rect(center=(X//2 + 150, Y//2 + 60))
+    wyjscie_clicked = False
+    dzwiek = pygame.image.load("Sound.png")
+    Nie_dzwiek = pygame.image.load("Not_sound.png")
+    dzwiek_rect = dzwiek.get_rect(center=(X//2 - 150, Y//2 + 60))
+
+
     display_surface = pygame.display.set_mode((X, Y))
     font = pygame.font.Font('freesansbold.ttf', 18)
 
+    pygame.mixer.music.load("muzyka.mp3")
+    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.play(-1)
 
-    text_x, text_y = 60, 10
-
+    clock = pygame.time.Clock()
+    time_counter = 0
 
     running = True
-
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE:  # Pauza gry
                     pause = not pause
-        if not pause:
-            time.sleep(1 / abs(time_speed))
-            cr_time.minute += 1
-            cr_time.normalizetime()
-        surf = (200, 200)
-        # elif pause == True:
-        pygame.draw.rect(display_surface, gray, pygame.Rect(30, 30, 60, 60), 2)
-        time_text = font.render(cr_time.print_time(), True, white, blue)
-        textRect = time_text.get_rect(center = (text_x, text_y))
-
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if wyjscie_rect.collidepoint(event.pos) and pause == True:  
+                    wyjscie_clicked = True  
+                elif dzwiek_rect.collidepoint(event.pos) and pause == True: 
+                    if music_playing:
+                        pygame.mixer.music.pause()
+                        music_playing = False
+                    else:
+                        pygame.mixer.music.unpause()
+                        music_playing = True
+            
+        # Czyszczenie ekranu
         display_surface.fill(blue)
+
+        # Zmiana czasu co 1 sekundę (opóźnienie przy pomocy time_counter)
+        if not pause:
+            time_counter += clock.get_time()  # Zliczanie czasu, w milisekundach
+            if time_counter >= 1000:  # Jeżeli minęła sekunda (1000ms)
+                cr_time.minute += 1
+                cr_time.normalizetime()
+                time_counter = 0  # Resetowanie licznika czasu
+            if cr_time.minute % 10 == 0:
+                current_weather = random.choice(wthr)
+
+
+        # Wyświetlanie czasu
+        time_text = font.render(cr_time.print_time(), True, white, blue)
+        textRect = time_text.get_rect(center=(X // 2, 50))
         display_surface.blit(time_text, textRect)
+        weather_text = font.render(f"Weather: {current_weather.type}", True, (255, 255, 255))
+        efficiency_text = font.render(
+            f"Efficiency: {ocen_efektywnosc(elektrownia, current_weather)}%",
+            True, (255, 255, 255)
+        )
+        display_surface.blit(time_text, (50, 50))
+        display_surface.blit(weather_text, (50, 80))
+        display_surface.blit(efficiency_text, (50, 110))
+        # Rysowanie obrazu pauzy, jeśli gra jest w pauzie
+
+        ekologia = (elektrownia.eko + elektrownia.dlugo) / 2 * 10
+        reputacja = (ocen_efektywnosc(elektrownia, current_weather) * 10) - elektrownia.koszt
+
+        draw_bar(display_surface, 50, Y - 100, X - 100, 30, ekologia, 100, (34, 139, 34))  # Ekologia
+        draw_bar(display_surface, 50, Y - 150, X - 100, 30, reputacja, 100, (255, 165, 0))  # Reputacja 
+        
+
+        if pause:
+            pauza_rect = pauza.get_rect(center=(X // 2, Y // 2))  # Wyśrodkowanie obrazu
+            display_surface.blit(pauza, pauza_rect)
+            display_surface.blit(wyjscie, wyjscie_rect)
+            if music_playing:
+                display_surface.blit(dzwiek, dzwiek_rect)
+            else:
+                display_surface.blit(Nie_dzwiek, dzwiek_rect)
+            if wyjscie_clicked:
+                running = False
+
+        # Aktualizacja ekranu
         pygame.display.flip()
+        clock.tick(30)  # Ustawienie liczby klatek na sekundę
 
     pygame.quit()
+
 
