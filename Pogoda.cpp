@@ -1,4 +1,8 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <cstdlib>
+
 using namespace std;
 const int N = 4;
 
