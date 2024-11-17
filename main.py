@@ -159,10 +159,8 @@ if __name__ == "__main__":
         if selected_plant:
             selected_plant_text = font.render(f"Wybrana Elektrownia: {selected_plant.type.capitalize()}", True, (255, 255, 255))
             display_surface.blit(selected_plant_text, (50, 200))
-
-
-            ekologia = (selected_plant.eko + selected_plant.dlugo) / 2 * 100
-            reputacja = (ocen_efektywnosc(selected_plant, current_weather) * 100) - selected_plant.koszt
+            ekologia = (selected_plant.eko + selected_plant.dlugo) / 2 * 10
+            reputacja = (ocen_efektywnosc(selected_plant, current_weather) * 10) - selected_plant.koszt
             draw_bar(display_surface, 50, 250, 200, 20, ekologia, 100, (0, 255, 0))  
             draw_bar(display_surface, 50, 280, 200, 20, reputacja, 100, (255, 0, 0))  
 
