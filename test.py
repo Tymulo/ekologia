@@ -44,6 +44,7 @@ class Elektrownia:
         self.dlugo = dlugo
 
 def ocen_efektywnosc(e, w):
+    # Funkcja ocenia efektywność elektrowni na podstawie pogody
     effectiveness = {
         "solarna": {"sunny": 10, "windy": 6, "cloudy": 3, "rainy": 2},
         "wiatrowa": {"sunny": 5, "windy": 10, "cloudy": 7, "rainy": 5},
@@ -55,8 +56,8 @@ def ocen_efektywnosc(e, w):
     return effectiveness[e.type][w.type]
 
 def draw_bar(surface, x, y, width, height, value, max_value, color):
-    pygame.draw.rect(surface, (255, 255, 255), (x, y, width, height), 2)  
-    pygame.draw.rect(surface, color, (x, y, (width * value) / max_value, height))  
+    pygame.draw.rect(surface, (255, 255, 255), (x, y, width, height), 2)  # Obramowanie paska
+    pygame.draw.rect(surface, color, (x, y, (width * value) / max_value, height))  # Zapełnienie paska
 
 def draw_button(surface, x, y, width, height, text, font, color):
     pygame.draw.rect(surface, color, (x, y, width, height))
@@ -69,6 +70,7 @@ if __name__ == "__main__":
     pygame.init()
     pygame.mixer.init()
     
+    # Inicjalizacja obiektów
     wthr = [Weather("sunny"), Weather("cloudy"), Weather("windy"), Weather("rainy")]
     elektrownie = [
         Elektrownia("solarna", 7, 5, 8),
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     pause = False
     music_playing = True
 
-
+    # Setup Pygame
     X, Y = 1280, 720
     white = (255, 255, 255)
     blue = (0, 0, 128)
@@ -114,7 +116,7 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE:  # Pauza gry
                     pause = not pause
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if wyjscie_rect.collidepoint(event.pos) and pause:  
@@ -128,43 +130,46 @@ if __name__ == "__main__":
                         music_playing = True
                 if selected_plant is None:
                     if 50 <= event.pos[0] <= 250 and 150 <= event.pos[1] <= 200:
-                        selected_plant = elektrownie[0]
+                        selected_plant = elektrownie[0]  # Solarna
                     elif 300 <= event.pos[0] <= 500 and 150 <= event.pos[1] <= 200:
-                        selected_plant = elektrownie[1]
+                        selected_plant = elektrownie[1]  # Wiatrowa
                     elif 550 <= event.pos[0] <= 750 and 150 <= event.pos[1] <= 200:
-                        selected_plant = elektrownie[2]
+                        selected_plant = elektrownie[2]  # Wodna
                     elif 800 <= event.pos[0] <= 1000 and 150 <= event.pos[1] <= 200:
-                        selected_plant = elektrownie[3]
+                        selected_plant = elektrownie[3]  # Atomowa
                     elif 1050 <= event.pos[0] <= 1250 and 150 <= event.pos[1] <= 200:
-                        selected_plant = elektrownie[4]
+                        selected_plant = elektrownie[4]  # Węglowa
 
+        # Czyszczenie ekranu
         display_surface.fill(blue)
 
+        # Zmiana czasu co 1 sekundę
         if not pause:
-            time_counter += clock.get_time()
-            if time_counter >= 1000:
+            time_counter += clock.get_time()  # Zliczanie czasu, w milisekundach
+            if time_counter >= 1000:  # Jeżeli minęła sekunda (1000ms)
                 cr_time.minute += 1
                 cr_time.normalizetime()
-                time_counter = 0
+                time_counter = 0  # Resetowanie licznika czasu
             if cr_time.minute % 10 == 0:
                 current_weather = random.choice(wthr)
 
+        # Wyświetlanie czasu i pogody
         time_text = font.render(cr_time.print_time(), True, white, blue)
         textRect = time_text.get_rect(center=(X // 2, 50))
         display_surface.blit(time_text, textRect)
         weather_text = font.render(f"Weather: {current_weather.type}", True, (255, 255, 255))
         display_surface.blit(weather_text, (50, 80))
 
-
+        # Efektywność elektrowni
         if selected_plant:
             selected_plant_text = font.render(f"Wybrana Elektrownia: {selected_plant.type.capitalize()}", True, (255, 255, 255))
             display_surface.blit(selected_plant_text, (50, 200))
 
-
+            # Wyliczanie wartości ekologii i reputacji
             ekologia = (selected_plant.eko + selected_plant.dlugo) / 2 * 100
             reputacja = (ocen_efektywnosc(selected_plant, current_weather) * 100) - selected_plant.koszt
-            draw_bar(display_surface, 50, 250, 200, 20, ekologia, 100, (0, 255, 0))  
-            draw_bar(display_surface, 50, 280, 200, 20, reputacja, 100, (255, 0, 0))  
+            draw_bar(display_surface, 50, 250, 200, 20, ekologia, 100, (0, 255, 0))  # Ekologia
+            draw_bar(display_surface, 50, 280, 200, 20, reputacja, 100, (255, 0, 0))  # Reputacja
 
         if selected_plant is None:
             draw_button(display_surface, 50, 150, 200, 50, "Solarna", font, (0, 128, 0))
@@ -174,7 +179,7 @@ if __name__ == "__main__":
             draw_button(display_surface, 1050, 150, 200, 50, "Węglowa", font, (139, 69, 19))
 
         if pause:
-            pauza_rect = pauza.get_rect(center=(X // 2, Y // 2))
+            pauza_rect = pauza.get_rect(center=(X // 2, Y // 2))  # Wyśrodkowanie obrazu
             display_surface.blit(pauza, pauza_rect)
             display_surface.blit(wyjscie, wyjscie_rect)
             if music_playing:
@@ -184,8 +189,8 @@ if __name__ == "__main__":
             if wyjscie_clicked:
                 running = False
 
-
+        # Aktualizacja ekranu
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(30)  # Ustawienie liczby klatek na sekundę
 
     pygame.quit()
